@@ -106,7 +106,7 @@ export default function App() {
     setIsLoading(true); setReply(''); setIsEditing(false); setTimestamp('')
     const config = user ? { headers: { Authorization: `Bearer ${user.token}` } } : {}
     try {
-      const res = await axios.post('https://mailcraft-backend-axsf.onrender.com', {
+      const res = await axios.post('https://mailcraft-backend-axsf.onrender.com/api/email/generate', {
         emailContent, tone: `${tone}. Extra: ${extraContext}`
       }, config)
       setReply(res.data)
