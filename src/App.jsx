@@ -2,28 +2,37 @@ import { useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
+const TONES = [
+  { label: 'Professional', emoji: '💼' },
+  { label: 'Casual', emoji: '😊' },
+  { label: 'Friendly', emoji: '🤝' },
+  { label: 'Urgent', emoji: '⚡' },
+];
+
 function App() {
-  const [emailContent, setEmailContent] = useState('');
-  const [tone, setTone] = useState('Professional');
-  const [extraContext, setExtraContext] = useState('');
+  const [emailContent, setEmailContent]   = useState('');
+  const [tone, setTone]                   = useState('Professional');
+  const [extraContext, setExtraContext]   = useState('');
   const [generatedReply, setGeneratedReply] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading]         = useState(false);
+  const [copied, setCopied]               = useState(false);
 
   const handleGenerate = async () => {
     if (!emailContent.trim()) return;
-    
     setIsLoading(true);
-    setGeneratedReply(''); // Clear previous reply
-
+    setGeneratedReply('');
     try {
-      const res = await axios.post('https://mailcraft-backend-axsf.onrender.com/api/email/generate', {
-        emailContent, 
-        tone: extraContext ? `${tone}. Extra context: ${extraContext}` : tone
-      });
+      const res = await axios.post(
+        'https://mailcraft-backend-axsf.onrender.com/api/email/generate',
+        {
+          emailContent,
+          tone: extraContext ? `${tone}. Extra context: ${extraContext}` : tone,
+        }
+      );
       setGeneratedReply(res.data);
     } catch (error) {
       console.error(error);
-      setGeneratedReply("Error: Unable to connect to the AI engine. Please try again.");
+      setGeneratedReply('Unable to reach the server. Please try again in a moment.');
     } finally {
       setIsLoading(false);
     }
@@ -31,85 +40,142 @@ function App() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedReply);
-    alert("Copied to clipboard!");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
+  const charCount = emailContent.length;
+
   return (
-    <div className="app-container">
-      {/* Header */}
-      <header className="app-header">
-        <div className="logo">✉️ MailCraft</div>
-        <p className="subtitle">Compose perfect replies, effortlessly.</p>
-      </header>
+    <div className="app-root">
 
-      {/* Main Workspace */}
-      <main className="workspace">
-        
-        {/* Left Panel: Input */}
-        <div className="panel input-panel">
-          <label className="section-title">Incoming Message</label>
-          <textarea 
-            className="text-box"
-            placeholder="Paste the email you received here..."
-            value={emailContent}
-            onChange={(e) => setEmailContent(e.target.value)}
-          />
+      {/* Decorative blobs */}
+      <div className="blob blob-1" aria-hidden="true" />
+      <div className="blob blob-2" aria-hidden="true" />
 
-          <label className="section-title mt-4">Response Tone</label>
-          <div className="tone-selector">
-            {['Professional', 'Casual', 'Friendly', 'Urgent'].map((t) => (
-              <button 
-                key={t}
-                className={`tone-btn ${tone === t ? 'active' : ''}`}
-                onClick={() => setTone(t)}
-              >
-                {t}
-              </button>
-            ))}
+      <div className="app-container">
+
+        {/* ── Header ── */}
+        <header className="app-header">
+          <div className="logo-wrap">
+            <span className="logo-icon">✉</span>
+            <span className="logo-text">MailCraft</span>
           </div>
+          <p className="subtitle">Write the perfect reply — in seconds.</p>
+        </header>
 
-          <label className="section-title mt-4">Extra Instructions (Optional)</label>
-          <input 
-            type="text" 
-            className="input-field"
-            placeholder="e.g., 'Keep it brief', 'Mention I am on leave'"
-            value={extraContext}
-            onChange={(e) => setExtraContext(e.target.value)}
-          />
+        {/* ── Workspace ── */}
+        <main className="workspace">
 
-          {/* The "Gmail" Action Button */}
-          <button 
-            className="generate-btn" 
-            onClick={handleGenerate} 
-            disabled={isLoading || !emailContent.trim()}
-          >
-            {isLoading ? '✨ Composing...' : '✨ Generate Reply'}
-          </button>
-        </div>
+          {/* ── LEFT: Input Panel ── */}
+          <section className="panel input-panel">
+            <div className="panel-label">
+              <span className="panel-num">01</span>
+              <span>Paste the email you received</span>
+            </div>
 
-        {/* Right Panel: Output */}
-        <div className="panel output-panel">
-          <div className="output-header">
-            <label className="section-title">AI Draft</label>
-            {generatedReply && (
-              <button className="copy-btn" onClick={copyToClipboard}>
-                📋 Copy
-              </button>
+            <div className="textarea-wrap">
+              <textarea
+                className="text-box"
+                placeholder="Hey, I wanted to follow up on our meeting last week…"
+                value={emailContent}
+                onChange={(e) => setEmailContent(e.target.value)}
+              />
+              <span className={`char-count ${charCount > 2000 ? 'warn' : ''}`}>
+                {charCount} chars
+              </span>
+            </div>
+
+            <div className="panel-label mt-section">
+              <span className="panel-num">02</span>
+              <span>Choose your tone</span>
+            </div>
+            <div className="tone-grid">
+              {TONES.map(({ label, emoji }) => (
+                <button
+                  key={label}
+                  className={`tone-btn ${tone === label ? 'active' : ''}`}
+                  onClick={() => setTone(label)}
+                >
+                  <span className="tone-emoji">{emoji}</span>
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="panel-label mt-section">
+              <span className="panel-num">03</span>
+              <span>Extra instructions <em>(optional)</em></span>
+            </div>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="e.g. Keep it short, mention I'm on leave…"
+              value={extraContext}
+              onChange={(e) => setExtraContext(e.target.value)}
+            />
+
+            <button
+              className="generate-btn"
+              onClick={handleGenerate}
+              disabled={isLoading || !emailContent.trim()}
+            >
+              {isLoading
+                ? <><span className="btn-spinner" /> Composing…</>
+                : <><span className="btn-star">✦</span> Generate Reply</>
+              }
+            </button>
+          </section>
+
+          {/* ── RIGHT: Output Panel ── */}
+          <section className="panel output-panel">
+            <div className="output-header">
+              <div className="panel-label">
+                <span className="panel-num">04</span>
+                <span>Your AI draft</span>
+              </div>
+              {generatedReply && !isLoading && (
+                <button
+                  className={`copy-btn ${copied ? 'copied' : ''}`}
+                  onClick={copyToClipboard}
+                >
+                  {copied ? '✓ Copied!' : '📋 Copy'}
+                </button>
+              )}
+            </div>
+
+            <div className={`output-box ${!generatedReply && !isLoading ? 'empty' : ''}`}>
+              {isLoading ? (
+                <div className="loading-state">
+                  <div className="loading-dots">
+                    <span /><span /><span />
+                  </div>
+                  <p className="loading-label">Crafting your reply…</p>
+                </div>
+              ) : generatedReply ? (
+                <p className="draft-text">{generatedReply}</p>
+              ) : (
+                <div className="placeholder-state">
+                  <span className="placeholder-icon">✉</span>
+                  <p className="placeholder-title">Your draft will appear here</p>
+                  <p className="placeholder-sub">Paste an email and hit Generate Reply</p>
+                </div>
+              )}
+            </div>
+
+            {generatedReply && !isLoading && (
+              <div className="output-footer">
+                <span className="output-tag">✦ AI Draft · Review before sending</span>
+              </div>
             )}
-          </div>
-          
-          <div className={`output-box ${!generatedReply ? 'empty' : ''}`}>
-            {isLoading ? (
-              <div className="loading-spinner"></div>
-            ) : generatedReply ? (
-              <p className="draft-text">{generatedReply}</p>
-            ) : (
-              <p className="placeholder-text">Your AI-generated reply will appear here...</p>
-            )}
-          </div>
-        </div>
+          </section>
 
-      </main>
+        </main>
+
+        <footer className="app-footer">
+          Made with ♥ · MailCraft
+        </footer>
+      </div>
     </div>
   );
 }
