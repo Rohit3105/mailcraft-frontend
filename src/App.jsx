@@ -4,7 +4,7 @@ import './App.css';
 
 function App() {
   const [emailContent, setEmailContent] = useState('');
-  const [tone, setTone] = useState('Professional');
+  const [tone, setTone] = useState('Casual');
   const [extraContext, setExtraContext] = useState('');
   const [generatedReply, setGeneratedReply] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,26 +34,36 @@ function App() {
     alert("Copied to clipboard!");
   };
 
+  const openInEmailClient = () => {
+    // This opens the default email app (Gmail, Apple Mail, etc.) with the text pre-filled
+    const mailtoLink = `mailto:?subject=Reply&body=${encodeURIComponent(generatedReply)}`;
+    window.location.href = mailtoLink;
+  };
+
   return (
     <div className="app-wrapper">
-      {/* Sticky Top Navigation */}
+      {/* Top Navigation */}
       <nav className="navbar">
         <div className="nav-brand">
-          <span className="logo-icon">✨</span>
+          <span className="logo-icon">✉️</span>
           <span className="logo-text">MailCraft</span>
         </div>
         <button className="sign-in-btn">Sign In</button>
       </nav>
+
+      {/* Header Area */}
+      <header className="hero-section">
+        <h1 className="hero-title">Write the perfect reply — in seconds.</h1>
+      </header>
 
       {/* Main Workspace Grid */}
       <main className="main-container">
         
         {/* Left Column: Input Controls */}
         <section className="card input-section">
-          <h2 className="section-heading">Compose Reply</h2>
           
-          <div className="input-group">
-            <label>Original Email</label>
+          <div className="step-group">
+            <label className="step-label"><span className="step-number">01</span> PASTE THE EMAIL YOU RECEIVED</label>
             <textarea 
               className="modern-input textarea-main"
               placeholder="Paste the email you received here..."
@@ -62,27 +72,32 @@ function App() {
             />
           </div>
 
-          <div className="input-group">
-            <label>Select Tone</label>
+          <div className="step-group">
+            <label className="step-label"><span className="step-number">02</span> CHOOSE YOUR TONE</label>
             <div className="chip-container">
-              {['Professional', 'Casual', 'Friendly', 'Urgent'].map((t) => (
+              {[
+                { name: 'Professional', icon: '💼' }, 
+                { name: 'Casual', icon: '😊' }, 
+                { name: 'Friendly', icon: '🤝' }, 
+                { name: 'Urgent', icon: '⚡' }
+              ].map((t) => (
                 <button 
-                  key={t}
-                  className={`chip ${tone === t ? 'active-chip' : ''}`}
-                  onClick={() => setTone(t)}
+                  key={t.name}
+                  className={`chip ${tone === t.name ? 'active-chip' : ''}`}
+                  onClick={() => setTone(t.name)}
                 >
-                  {t}
+                  <span className="chip-icon">{t.icon}</span> {t.name}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="input-group">
-            <label>Extra Instructions (Optional)</label>
+          <div className="step-group">
+            <label className="step-label"><span className="step-number">03</span> EXTRA INSTRUCTIONS (optional)</label>
             <input 
               type="text" 
               className="modern-input"
-              placeholder="e.g., 'Mention I am out of office until Monday'"
+              placeholder="e.g. Keep it short, mention I'm on leave..."
               value={extraContext}
               onChange={(e) => setExtraContext(e.target.value)}
             />
@@ -95,20 +110,27 @@ function App() {
           >
             {isLoading ? (
               <span className="loading-state">
-                <span className="spinner"></span> Generating...
+                <span className="spinner"></span> Composing...
               </span>
-            ) : 'Generate Perfect Reply'}
+            ) : '✨ Generate Reply'}
           </button>
         </section>
 
         {/* Right Column: AI Output */}
         <section className="card output-section">
           <div className="output-header">
-            <h2 className="section-heading">AI Draft</h2>
-            {generatedReply && (
-              <button className="copy-action" onClick={copyToClipboard}>
-                Copy Text
-              </button>
+            <label className="step-label"><span className="step-number">04</span> YOUR AI DRAFT</label>
+            
+            {/* New Action Buttons */}
+            {generatedReply && !isLoading && (
+              <div className="action-buttons">
+                <button className="icon-btn" onClick={copyToClipboard} title="Copy to clipboard">
+                  📋 Copy
+                </button>
+                <button className="icon-btn highlight-btn" onClick={openInEmailClient} title="Send via Email">
+                  📧 Open in Mail
+                </button>
+              </div>
             )}
           </div>
           
